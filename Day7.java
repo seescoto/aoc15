@@ -64,6 +64,7 @@ public class Day7 {
 
     public static void main(String args[]) {
         prob1();
+        prob2();
     }
 
     public static void prob1() {
@@ -73,10 +74,10 @@ public class Day7 {
         // is finished
 
         Queue<String> q = new LinkedList<String>(); // use offer for appending to end, poll to get front one
-        Hashtable<String, Character> wires = new Hashtable<String, Character>();
-        String line;
+        Hashtable<String, Short> wires = new Hashtable<String, Short>();
+        String line, key;
         String parts[];
-        char val;
+        short val = 0;
 
         createQueue(q);
 
@@ -85,9 +86,17 @@ public class Day7 {
             parts = line.split(" "); // split string by space
             // evaluate left side, find value (IF IT EXISTS YET) - if it doesn't, re-add
             // line to q
-            val = evaluate(parts, wires);
-
+            // if it does, add value to right side wire
+            if (canEvaluate(parts, wires)) {
+                val = evaluate(parts, wires);
+                key = parts[parts.length - 1];
+                wires.put(key, val);
+            } else {
+                q.offer(line);
+            }
         }
+
+        System.out.printf("a: %d\n", wires.get("a"));
 
     }
 
@@ -105,50 +114,150 @@ public class Day7 {
         }
     }
 
-    public static char evaluate(String arr[], Hashtable<String, Character> hash) {
+    public static boolean canEvaluate(String arr[], Hashtable<String, Short> hash) {
+        // case 1 - 2 operands on left , (AND, OR, LSHIFT, RSHIFT)
+        // case 2 - 1 operand on left , wire negated (NOT)
+        // case 3 - 1 operand on left , all alone
+
+        if (arr.length == 5) {
+            // meaning there's two operands on the left side - evaluate arr0 and 2
+            if (!(isValid(arr[0], hash) && isValid(arr[2], hash)))
+                return false;
+        } else if (arr.length == 4) {
+            // must be "NOT" - w can be a number or a wire - evaluate arr1
+            if (!isValid(arr[1], hash))
+                return false;
+        } else {
+            // length == 3 so left side must be a single value - evaluate arr0
+            if (!isValid(arr[0], hash))
+                return false;
+        }
+
+        return true;
+    }
+
+    public static short evaluate(String arr[], Hashtable<String, Short> hash) {
         // given arr of instructions in either form
         // wire1, operation, wire2, ->, wire3
         // or
         // wire1, ->, wire2
         // or
         // NOT wire1 -> wire2
-        // evaluate left side (if it exists) and return it if so
-        char left;
+        // evaluate left side (if it exists) and put it in 'val'
+        // if left side cant be evaluated, return false
 
-        // case 1 - 2 operands on left , both are wires (so AND and OR)
-        // case 2 - 2 operands on left , first is wire next is int (LSHIFT and RSHIFT)
-        // case 3 - 1 operand on left , wire negated (NOT)
-        // case 4 - 1 operand on left , all alone
+        // case 1 - 2 operands on left , (AND, OR, LSHIFT, RSHIFT)
+        // case 2 - 1 operand on left , wire negated (NOT)
+        // case 3 - 1 operand on left , all alone
+        short val;
 
         if (arr.length == 5) {
             // meaning there's two operands on the left side, evaluate
-            // and, rshift, lshift, or, not
-            if (hash.get(arr[0]) == null || hash.get(arr[2]) == null)
-                return '\0';
-            left = eval(arr, hash);
-
+            val = evalTwoOperands(arr, hash);
+        } else if (arr.length == 4) {
+            // must be "NOT" - w can be a number or a wire
+            short w = getValue(arr[1], hash);
+            val = (short) (~w);
+        } else {
+            // length == 3 so left side must be a single value
+            val = getValue(arr[0], hash);
         }
 
-        return '0';
+        // if passed, must be evaluatable
+        return val;
     }
 
-    public static char eval(String arr[], Hashtable<String, Character> hash) {
-        int ret = 0;
-        int w1Val = hash.get(arr[0]), w2Val = hash.get(arr[2]);
-        short w1 = (short) w1Val, w2 = (short) w2Val;
+    public static short evalTwoOperands(String arr[], Hashtable<String, Short> hash) {
+        // returns false if can't be evaluated,
+        // if can be evaluated, returns true and sets val as evaluation
 
-        switch (arr[1]) {
-            case "AND":
-                ret = w1 & w2;
-                break;
-            case "OR":
-                ret = w1 | w2;
-                break;
-            case "LSHIFT":
-                break;
+        short w1, w2, val;
 
+        // if shift
+        if (arr[1].equals("LSHIFT") || arr[1].equals("RSHIFT")) {
+            w1 = getValue(arr[0], hash);
+            w2 = getValue(arr[2], hash);
+
+            if (arr[1].equals("LSHIFT")) {
+                val = (short) (w1 << w2);
+            } else {
+                // must be RSHIFT
+                val = (short) (w1 >> w2);
+            }
+        } else { // must be AND or OR
+            w1 = getValue(arr[0], hash);
+            w2 = getValue(arr[2], hash);
+
+            if (arr[1].equals("AND")) {
+                val = (short) (w1 & w2);
+            } else {
+                // must be OR
+                val = (short) (w1 | w2);
+            }
         }
 
-        return (char) ret;
+        return val;
+    }
+
+    public static boolean isDigit(String strNum) {
+        if (strNum == null)
+            return false;
+        try {
+            Double.parseDouble(strNum);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static short getValue(String str, Hashtable<String, Short> hash) {
+        if (isDigit(str))
+            return Short.valueOf(str);
+        else
+            return hash.get(str);
+    }
+
+    public static boolean isValid(String str, Hashtable<String, Short> hash) {
+        return (isDigit(str) || hash.get(str) != null);
+    }
+
+    /*
+     * Now, take the signal you got on wire a, override wire b to that signal, and
+     * reset the other wires (including wire a). What new signal is ultimately
+     * provided to wire a?
+     * 
+     */
+
+    public static void prob2() {
+        Hashtable<String, Short> wires = new Hashtable<String, Short>();
+        wires.put("b", (short) 16076);
+
+        Queue<String> q = new LinkedList<String>(); // use offer for appending to end, poll to get front one
+        String line, key;
+        String parts[];
+        short val = 0;
+
+        createQueue(q);
+
+        while (!q.isEmpty()) {
+            line = q.poll();
+            parts = line.split(" "); // split string by space
+            // evaluate left side, find value (IF IT EXISTS YET) - if it doesn't, re-add
+            // line to q
+            // if it does, add value to right side wire
+            if (canEvaluate(parts, wires)) {
+                val = evaluate(parts, wires);
+                key = parts[parts.length - 1];
+                // dont reset b!!!
+                if (!(key.equals("b")))
+                    wires.put(key, val);
+            } else {
+                q.offer(line);
+            }
+        }
+
+        System.out.printf("a: %d\n", wires.get("a"));
+
     }
 }
