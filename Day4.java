@@ -1,11 +1,12 @@
 import java.math.BigInteger;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Day4 {
     /*
+     * --- Day 4: The Ideal Stocking Stuffer ---
+     * 
      * Santa needs help mining some AdventCoins (very similar to bitcoins) to use as
      * gifts for all the economically forward-thinking little girls and boys.
      * 
