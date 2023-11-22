@@ -1,3 +1,7 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 public class Day8 {
 
     /*
@@ -45,10 +49,103 @@ public class Day8 {
      */
 
     public static void main(String args[]) {
-        return;
+        prob1();
+        prob2();
     }
 
     public static void prob1() {
-        ;
+        File file = new File("day8_input.txt");
+        try {
+            Scanner input = new Scanner(file);
+            String line;
+            int charsInString, actualChars, totalDiff = 0;
+            while (input.hasNextLine()) {
+                line = input.nextLine();
+                System.out.println(line);
+                actualChars = line.length();
+                System.out.printf("actual characters: %d\n", actualChars);
+                charsInString = unQuoteAndEscape(line).length();
+                System.out.printf("characters in the string: %d\n", charsInString);
+                totalDiff += (actualChars - charsInString);
+            }
+            input.close();
+
+            System.out.printf("Total difference is %d\n", totalDiff);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String unQuoteAndEscape(String str) {
+        // string will start and end with quotes, take those out
+        str = str.substring(1, str.length() - 1);
+        // escaped chars are all just one char in the string, can replace with *
+        // for escaped hex chars, do search for \x then 2 hex digits
+        str = str.replaceAll("\\\\x[0-9a-f]{2}", "*"); // replaceAll for regex
+        str = str.replace("\\\"", "*"); // " to one char
+        str = str.replace("\\\\", "*"); // \ to one char
+
+        return str;
+    }
+
+    /*
+     * Now, let's go the other way. In addition to finding the number of characters
+     * of code, you should now encode each code representation as a new string and
+     * find the number of characters of the new encoded representation, including
+     * the surrounding double quotes.
+     * 
+     * For example:
+     * 
+     * "" encodes to "\"\"", an increase from 2 characters to 6.
+     * 
+     * "abc" encodes to "\"abc\"", an increase from 5 characters to 9.
+     * 
+     * "aaa\"aaa" encodes to "\"aaa\\\"aaa\"", an increase from 10 characters to 16.
+     * 
+     * "\x27" encodes to "\"\\x27\"", an increase from 6 characters to 11.
+     * 
+     * Your task is to find the total number of characters to represent the newly
+     * encoded strings minus the number of characters of code in each original
+     * string literal. For example, for the strings above, the total encoded length
+     * (6 + 9 + 16 + 11 = 42) minus the characters in the original code
+     * representation (23, just like in the first part of this puzzle) is 42 - 23 =
+     * 19.
+     */
+
+    public static void prob2() {
+        File file = new File("day8_input.txt");
+        try {
+            Scanner input = new Scanner(file);
+            String line;
+            int moreChars, actualChars, totalDiff = 0;
+            while (input.hasNextLine()) {
+                line = input.nextLine();
+                System.out.println(line);
+                actualChars = line.length();
+                System.out.printf("actual characters: %d\n", actualChars);
+                moreChars = reQuoteAndUnEscape(line).length();
+                System.out.printf("characters in the string: %d\n", moreChars);
+                totalDiff += (moreChars - actualChars);
+            }
+            input.close();
+
+            System.out.printf("Total difference is %d\n", totalDiff);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String reQuoteAndUnEscape(String str) {
+        // replace escaped chars
+        // " is really \" (so 2 chars) -> **
+        // \ is really \\ (so 2 chars) -> **
+        // \x{2nums} is really \\ x(2nums) (so 5 chars) -> *****
+        str = str.replace("\"", "**");
+        str = str.replace("\\", "**");
+        str = str.replaceAll("\\\\x[0-9a-f]{2}", "*****");
+
+        // add quotes to outside
+        str = "\"" + str + "\"";
+        return str;
     }
 }
