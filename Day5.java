@@ -175,7 +175,7 @@ public class Day5 {
         // has a pair of any two letters that appears at least twice BUT doesnt overlap
 
         boolean repeatLetter = false, hasPairTwice = false;
-        char old, mid, curr;
+        char old, curr;
 
         // check if first two (or second two) letters are a pair that appears twice in
         // the string
@@ -184,7 +184,6 @@ public class Day5 {
 
         for (int i = 2; i < str.length(); i++) {
             old = str.charAt(i - 2);
-            mid = str.charAt(i - 1);
             curr = str.charAt(i);
 
             if (old == curr)
