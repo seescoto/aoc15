@@ -13,4 +13,9 @@ public class Edge implements Comparable<Edge> {
         return Integer.compare(this.weight, e.weight);
     }
 
+    @Override
+    public String toString() {
+        return this.source + " -> " + this.dest + " : " + this.weight;
+    }
+
 }

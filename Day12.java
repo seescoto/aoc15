@@ -1,9 +1,17 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.nio.file.FileAlreadyExistsException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+//need json parser
+/* 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+*/
 
 public class Day12 {
     /*
@@ -84,8 +92,17 @@ public class Day12 {
      */
 
     public static int prob2() {
-        // idk lol
-        return 0;
+        File file = new File("day12_input.txt");
+        String input = getInput(file);
+        int total = sumNonRedNums(input);
 
+        return total;
+    }
+
+    // in a json element, sum differently based on if it's a json array, object, or
+    // a primitive element,
+    // if its an object that has 'red' in it, ignore it all
+    public static int sumNonRedNums(String input) {
+        return 0;
     }
 }
