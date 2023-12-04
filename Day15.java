@@ -52,34 +52,25 @@ public class Day15 {
 
     public static void main(String args[]) {
         prob1();
+        prob2();
     }
 
     public static void prob1() {
-        ArrayList<Ingredient> ingredients = getIngredients("test.txt");
-        Set<ArrayList<Ingredient>> listOfRecipes = new HashSet<>();
+        ArrayList<Ingredient> ingredients = getIngredients("day15_input.txt");
+        // Set<ArrayList<Ingredient>> listOfRecipes = new HashSet<>();
+        // dont store recipes, too much memory - just store scores
+        Set<Integer> recipeScores = new HashSet<>();
         ArrayList<Ingredient> recipe = new ArrayList<>();
-        createRecipe(listOfRecipes, recipe, ingredients);
-        // ArrayList<Recipe> recipes = new ArrayList<>();
+        createRecipe(recipeScores, recipe, ingredients);
 
-        System.out.println(listOfRecipes.size());
         int maxScore = Integer.MIN_VALUE;
-        for (ArrayList<Ingredient> r : listOfRecipes) {
-            Recipe rec = new Recipe(r);
-            // recipes.add(rec);
-            if (maxScore < rec.score) {
-                System.out.println(rec);
-                System.out.println(rec.score);
-                maxScore = rec.score;
+        for (Integer i : recipeScores) {
+            if (i > maxScore) {
+                maxScore = i;
             }
-
-            // wrong total score is printing out, debug later
         }
 
         System.out.println(maxScore);
-
-        // get permutations of different ingredients and amounts of them, get their
-        // value
-        // Permutation<Ingredient> perms = new Permutation<>(ingredients);
 
     }
 
@@ -122,19 +113,19 @@ public class Day15 {
 
     }
 
-    // create all possible recipes - all combos of ingredients
+    // create all possible recipes - all combos of ingredient amounts
 
-    public static void createRecipe(Set<ArrayList<Ingredient>> list,
+    public static void createRecipe(Set<Integer> list,
             ArrayList<Ingredient> ingredients, ArrayList<Ingredient> toAdd) {
 
-        ArrayList<Ingredient> ingredientsCopy = cloneIngList(ingredients);
-        ArrayList<Ingredient> toAddCopy = cloneIngList(toAdd);
-
+        ArrayList<Ingredient> ingredientsCopy = new ArrayList<>(ingredients);
+        ArrayList<Ingredient> toAddCopy = new ArrayList<>(toAdd);
         int totalAmount = getAmount(ingredients);
 
         // if have a full recipe - all ingredients in list, add to list of recipes
         if (toAdd.size() == 0) {
-            list.add(ingredients);
+            // list.add(ingredients);
+            list.add(getScore(ingredients));
         } else if (toAdd.size() == 1) {
             // if only one more ingredient to add, then make that amount (100 - totalAmount)
             // so it makes the full recipe be amount 100
@@ -143,6 +134,8 @@ public class Day15 {
             ingredientsCopy.add(i);
             createRecipe(list, ingredientsCopy, toAddCopy);
         } else {
+            // permute like normal
+
             for (int j = 0; j < 100 - totalAmount + 1; j++) {
                 for (Ingredient i : toAdd) {
                     // find ingredient in toAdd and add it to recipe, then recurse
@@ -169,13 +162,111 @@ public class Day15 {
         return total;
     }
 
-    public static ArrayList<Ingredient> cloneIngList(ArrayList<Ingredient> og) {
-        ArrayList<Ingredient> newList = new ArrayList<>();
-        for (Ingredient i : og) {
-            Ingredient newI = new Ingredient(i);
-            newList.add(newI);
+    public static int getScore(ArrayList<Ingredient> arr) {
+        int scores[] = { 0, 0, 0, 0 }; // capacity, durability, flavor, texture
+        int totalScore = 1;
+
+        for (Ingredient i : arr) {
+            // capacity = 0, durability = 1
+            // flavor = 2, texture = 3
+            scores[0] += i.amount * i.capacity;
+            scores[1] += i.amount * i.durability;
+            scores[2] += i.amount * i.flavor;
+            scores[3] += i.amount * i.texture;
         }
-        return newList;
+
+        // IF ANY SCORES ARE NEGATIVE, MAKE IT ZERO!
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] < 0) {
+                scores[i] = 0;
+            }
+            totalScore *= scores[i];
+        }
+
+        return totalScore;
     }
 
+    /*
+     * --- Part Two ---
+     * 
+     * Your cookie recipe becomes wildly popular! Someone asks if you can make
+     * another recipe that has exactly 500 calories per cookie (so they can use it
+     * as a meal replacement). Keep the rest of your award-winning process the same
+     * (100 teaspoons, same ingredients, same scoring system).
+     * 
+     * For example, given the ingredients above, if you had instead selected 40
+     * teaspoons of butterscotch and 60 teaspoons of cinnamon (which still adds to
+     * 100), the total calorie count would be 40*8 + 60*3 = 500. The total score
+     * would go down, though: only 57600000, the best you can do in such trying
+     * circumstances.
+     * 
+     * Given the ingredients in your kitchen and their properties, what is the total
+     * score of the highest-scoring cookie you can make with a calorie total of 500?
+     * 
+     */
+
+    public static int getCalories(ArrayList<Ingredient> arr) {
+        int cals = 0;
+        for (Ingredient i : arr) {
+            cals += i.amount * i.calories;
+        }
+
+        return cals;
+    }
+
+    // only adds score if calories = 500
+    public static void createMealReplacementRecipe(Set<Integer> list,
+            ArrayList<Ingredient> ingredients, ArrayList<Ingredient> toAdd) {
+
+        ArrayList<Ingredient> ingredientsCopy = new ArrayList<>(ingredients);
+        ArrayList<Ingredient> toAddCopy = new ArrayList<>(toAdd);
+        int totalAmount = getAmount(ingredients);
+
+        // if have a full recipe - all ingredients in list, add to list of recipes
+        if (toAdd.size() == 0) {
+            if (getCalories(ingredients) == 500)
+                list.add(getScore(ingredients));
+        } else if (toAdd.size() == 1) {
+            // if only one more ingredient to add, then make that amount (100 - totalAmount)
+            // so it makes the full recipe be amount 100
+            Ingredient i = toAddCopy.remove(0);
+            i.amount = (100 - totalAmount);
+            ingredientsCopy.add(i);
+            createMealReplacementRecipe(list, ingredientsCopy, toAddCopy);
+        } else {
+            // permute like normal
+
+            for (int j = 0; j < 100 - totalAmount + 1; j++) {
+                for (Ingredient i : toAdd) {
+                    // find ingredient in toAdd and add it to recipe, then recurse
+                    toAddCopy.remove(i);
+                    i.amount = j;
+                    ingredientsCopy.add(i);
+                    createMealReplacementRecipe(list, ingredientsCopy, toAddCopy);
+                    // re-add ingredient to toAdd and loop again
+                    toAddCopy.add(i);
+                    ingredientsCopy.remove(i);
+                }
+            }
+
+        }
+
+    }
+
+    public static void prob2() {
+        ArrayList<Ingredient> ingredients = getIngredients("day15_input.txt");
+        Set<Integer> recipeScores = new HashSet<>();
+        ArrayList<Ingredient> recipe = new ArrayList<>();
+        createMealReplacementRecipe(recipeScores, recipe, ingredients);
+
+        int maxScore = Integer.MIN_VALUE;
+        for (Integer i : recipeScores) {
+
+            if (i > maxScore) {
+                maxScore = i;
+            }
+        }
+
+        System.out.println(maxScore);
+    }
 }

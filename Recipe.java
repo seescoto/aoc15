@@ -12,9 +12,7 @@ public class Recipe {
     public Recipe(ArrayList<Ingredient> ingredients) {
         if (!this.setIngredients(ingredients)) {
             System.out.println("Error setting ingredients... please make sure all amounts add to 100.");
-            for (Ingredient i : ingredients) {
-                System.out.println(i);
-            }
+
         }
         this.score = this.getScore();
     }
@@ -49,7 +47,7 @@ public class Recipe {
         // bad form to iterate over class attributes in java, will do the long way
         // public int capacity, durability, flavor, texture, calories;
 
-        int scores[] = new int[4]; // capacity, durability, flavor, texture
+        int scores[] = { 0, 0, 0, 0 }; // capacity, durability, flavor, texture
         int totalScore = 1;
 
         for (Ingredient i : this.ingredients) {
@@ -61,7 +59,11 @@ public class Recipe {
             scores[3] += i.amount * i.texture;
         }
 
+        // IF ANY SCORES ARE NEGATIVE, MAKE IT ZERO!
         for (int i = 0; i < scores.length; i++) {
+            if (scores[i] < 0) {
+                scores[i] = 0;
+            }
             totalScore *= scores[i];
         }
 
